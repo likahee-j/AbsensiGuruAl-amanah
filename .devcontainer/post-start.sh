@@ -3,7 +3,11 @@
 # Tujuan:
 #  1. Pastikan migration up-to-date kalau ada commit baru dengan migration tambahan.
 #  2. Set APP_URL ke domain publik Codespaces (supaya route()/asset() pakai HTTPS).
-#  3. Jalankan `php artisan serve` di background biar port 8000 langsung siap di-share.
+#
+# Catatan: `php artisan serve` TIDAK dijalankan di sini lagi karena proses
+# background dari postStartCommand sering ke-reap oleh container init di
+# Codespaces. Server di-start via .vscode/tasks.json (runOn: folderOpen),
+# yang dipegang VSCode jadi proses tetap hidup selama tab Codespace terbuka.
 
 set -euo pipefail
 
@@ -37,22 +41,8 @@ if [ -n "${CODESPACE_NAME:-}" ] && [ -n "${GITHUB_CODESPACES_PORT_FORWARDING_DOM
     php artisan config:clear || true
 fi
 
-echo "==> Hentikan server lama (kalau ada)..."
-pkill -f "artisan serve" || true
-sleep 1
-
-echo "==> Start Laravel server di background (port 8000)..."
-mkdir -p storage/logs
-nohup php artisan serve --host=0.0.0.0 --port=8000 \
-    > storage/logs/artisan-serve.log 2>&1 &
-disown || true
-
-sleep 2
-if pgrep -f "artisan serve" >/dev/null; then
-    echo "✅ Codespace siap. Server jalan di port 8000."
-    if [ -n "${CODESPACE_NAME:-}" ]; then
-        echo "   URL publik: https://${CODESPACE_NAME}-8000.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
-    fi
-else
-    echo "⚠️  Server gagal start. Cek storage/logs/artisan-serve.log"
+echo "✅ Codespace siap. Server otomatis di-start oleh VSCode task 'Laravel: Serve'."
+echo "   Cek tab TERMINAL → pilih dropdown 'Laravel: Serve' untuk lihat lognya."
+if [ -n "${CODESPACE_NAME:-}" ]; then
+    echo "   URL publik: https://${CODESPACE_NAME}-8000.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
 fi
