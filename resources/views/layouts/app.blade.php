@@ -197,7 +197,7 @@
         </div>
 
         <footer class="app-footer">
-            Copyright &copy; {{ date('Y') }} <span class="brand-name">ABSENSI GURU</span>.
+            Copyright &copy; {{ date('Y') }} <span class="brand-name">ABSENSI GURUxlika</span>.
         </footer>
     </div>
 
