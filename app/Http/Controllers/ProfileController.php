@@ -6,11 +6,13 @@ use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class ProfileController extends Controller
 {
@@ -61,6 +63,15 @@ class ProfileController extends Controller
         $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'photo-updated');
+    }
+
+    public function qr(Request $request): Response
+    {
+        $user = $request->user();
+        $payload = $user->username ?: 'USER-'.$user->id;
+        $svg = QrCode::format('svg')->size(320)->margin(1)->errorCorrection('H')->generate($payload);
+
+        return response($svg)->header('Content-Type', 'image/svg+xml');
     }
 
     public function destroy(Request $request): RedirectResponse

@@ -34,6 +34,9 @@
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-foto" type="button">Edit Foto</button>
                         </li>
                         <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-qr" type="button">QR Saya</button>
+                        </li>
+                        <li class="nav-item">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-akun" type="button">Edit Akun</button>
                         </li>
                     </ul>
@@ -101,6 +104,26 @@
                                 </div>
                                 <button type="submit" class="btn btn-primary">Update Foto</button>
                             </form>
+                        </div>
+
+                        {{-- QR Saya --}}
+                        <div class="tab-pane fade" id="tab-qr">
+                            <div class="text-center">
+                                <p class="text-muted mb-3">
+                                    QR Code identitas Anda untuk absensi via Mode Kios.
+                                    Tunjukkan ke kamera laptop sekolah saat absen.
+                                </p>
+                                <img src="{{ route('profile.qr') }}" alt="QR Code Saya"
+                                     style="width:280px;max-width:100%;">
+                                <div class="text-muted small mt-3">{{ $user->username ?: 'USER-'.$user->id }}</div>
+                                <div class="mt-3">
+                                    <a href="{{ route('profile.qr') }}"
+                                       download="qr-{{ \Illuminate\Support\Str::slug($user->name) }}.svg"
+                                       class="btn btn-primary">
+                                        <i class="bi bi-download me-1"></i>Download QR
+                                    </a>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Edit Akun --}}
