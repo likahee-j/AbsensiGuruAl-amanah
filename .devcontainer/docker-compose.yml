@@ -1,0 +1,43 @@
+services:
+    app:
+        image: mcr.microsoft.com/devcontainers/php:1-8.3-bookworm
+        volumes:
+            - ../..:/workspaces:cached
+        command: sleep infinity
+        environment:
+            DB_CONNECTION: mysql
+            DB_HOST: mysql
+            DB_PORT: 3306
+            DB_DATABASE: absensi
+            DB_USERNAME: laravel
+            DB_PASSWORD: secret
+        depends_on:
+            mysql:
+                condition: service_healthy
+        networks:
+            - absensi-net
+
+    mysql:
+        image: mysql:8.0
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: absensi
+            MYSQL_USER: laravel
+            MYSQL_PASSWORD: secret
+        volumes:
+            - mysql-data:/var/lib/mysql
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+        networks:
+            - absensi-net
+
+volumes:
+    mysql-data:
+
+networks:
+    absensi-net:
+        driver: bridge

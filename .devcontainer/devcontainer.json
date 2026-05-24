@@ -1,0 +1,47 @@
+{
+    "name": "Absensi Guru Al-Amanah (Laravel 13 + MySQL)",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "app",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "shutdownAction": "stopCompose",
+
+    "forwardPorts": [8000, 5173, 3306],
+    "portsAttributes": {
+        "8000": {
+            "label": "Laravel App",
+            "onAutoForward": "openBrowser",
+            "visibility": "public"
+        },
+        "5173": {
+            "label": "Vite Dev Server"
+        },
+        "3306": {
+            "label": "MySQL",
+            "onAutoForward": "silent"
+        }
+    },
+
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
+    "postStartCommand": "bash .devcontainer/post-start.sh",
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bmewburn.vscode-intelephense-client",
+                "onecentlin.laravel-blade",
+                "ryannaddy.laravel-artisan",
+                "amiralizadeh9480.laravel-extra-intellisense",
+                "bradlc.vscode-tailwindcss",
+                "mtxr.sqltools",
+                "mtxr.sqltools-driver-mysql"
+            ],
+            "settings": {
+                "php.suggest.basic": false,
+                "intelephense.environment.phpVersion": "8.3",
+                "files.eol": "\n"
+            }
+        }
+    },
+
+    "remoteUser": "vscode"
+}
