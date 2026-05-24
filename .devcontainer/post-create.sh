@@ -20,7 +20,19 @@ if ! php -m | grep -q '^gd$'; then
             https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions
         sudo chmod +x /usr/local/bin/install-php-extensions
     fi
-    sudo install-php-extensions gd zip
+    # Image MS devcontainer tidak set PHP_INI_DIR; harus disuplai eksplisit
+    # supaya docker-php-ext-enable bisa menulis .ini ke lokasi yang benar.
+    sudo PHP_INI_DIR=/usr/local/etc/php install-php-extensions gd zip || true
+
+    # Fallback: kalau install-php-extensions gagal di langkah enable,
+    # buat file .ini manual selama .so-nya sudah ter-compile.
+    EXT_DIR=$(php -r 'echo ini_get("extension_dir");')
+    if ! php -m | grep -q '^gd$' && [ -f "$EXT_DIR/gd.so" ]; then
+        sudo bash -c "echo 'extension=gd' > /usr/local/etc/php/conf.d/docker-php-ext-gd.ini"
+    fi
+    if ! php -m | grep -q '^zip$' && [ -f "$EXT_DIR/zip.so" ]; then
+        sudo bash -c "echo 'extension=zip' > /usr/local/etc/php/conf.d/docker-php-ext-zip.ini"
+    fi
 fi
 
 echo "==> [1/7] Install PHP dependencies (composer)"
