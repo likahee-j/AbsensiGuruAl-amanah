@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => CheckRole::class,
         ]);
+
+        // Trust X-Forwarded-* dari proxy (Codespaces / load balancer cloud)
+        // supaya Laravel tahu request asli HTTPS dan generate URL yang benar.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
