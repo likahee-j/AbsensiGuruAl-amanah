@@ -7,6 +7,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "==> [0/7] Pastikan PHP extension gd & zip terinstall"
+# Image PHP devcontainer kadang punya yarn.list dengan GPG expired
+# yang bikin apt-get update gagal. Kita tidak pakai Yarn, jadi disable.
+if [ -f /etc/apt/sources.list.d/yarn.list ]; then
+    sudo rm -f /etc/apt/sources.list.d/yarn.list
+fi
 if ! php -m | grep -q '^gd$'; then
     # install-php-extensions adalah helper script mlocati yang otomatis handle
     # OS lib + docker-php-ext-configure + docker-php-ext-install.
