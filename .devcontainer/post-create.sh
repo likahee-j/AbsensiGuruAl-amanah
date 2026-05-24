@@ -6,13 +6,22 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-echo "==> [0/7] Pastikan PHP extension gd & zip terinstall"
+echo "==> [0/7] Pastikan PHP extension gd, zip, pdo_mysql terinstall"
 # Image PHP devcontainer kadang punya yarn.list dengan GPG expired
 # yang bikin apt-get update gagal. Kita tidak pakai Yarn, jadi disable.
 if [ -f /etc/apt/sources.list.d/yarn.list ]; then
     sudo rm -f /etc/apt/sources.list.d/yarn.list
 fi
-if ! php -m | grep -q '^gd$'; then
+
+NEED_INSTALL=0
+for ext in gd zip pdo_mysql; do
+    if ! php -m | grep -qi "^${ext}$"; then
+        NEED_INSTALL=1
+        break
+    fi
+done
+
+if [ "$NEED_INSTALL" = "1" ]; then
     # install-php-extensions adalah helper script mlocati yang otomatis handle
     # OS lib + docker-php-ext-configure + docker-php-ext-install.
     if ! command -v install-php-extensions >/dev/null 2>&1; then
@@ -22,17 +31,16 @@ if ! php -m | grep -q '^gd$'; then
     fi
     # Image MS devcontainer tidak set PHP_INI_DIR; harus disuplai eksplisit
     # supaya docker-php-ext-enable bisa menulis .ini ke lokasi yang benar.
-    sudo PHP_INI_DIR=/usr/local/etc/php install-php-extensions gd zip || true
+    sudo PHP_INI_DIR=/usr/local/etc/php install-php-extensions gd zip pdo_mysql || true
 
     # Fallback: kalau install-php-extensions gagal di langkah enable,
     # buat file .ini manual selama .so-nya sudah ter-compile.
     EXT_DIR=$(php -r 'echo ini_get("extension_dir");')
-    if ! php -m | grep -q '^gd$' && [ -f "$EXT_DIR/gd.so" ]; then
-        sudo bash -c "echo 'extension=gd' > /usr/local/etc/php/conf.d/docker-php-ext-gd.ini"
-    fi
-    if ! php -m | grep -q '^zip$' && [ -f "$EXT_DIR/zip.so" ]; then
-        sudo bash -c "echo 'extension=zip' > /usr/local/etc/php/conf.d/docker-php-ext-zip.ini"
-    fi
+    for ext in gd zip pdo_mysql; do
+        if ! php -m | grep -qi "^${ext}$" && [ -f "$EXT_DIR/${ext}.so" ]; then
+            sudo bash -c "echo 'extension=${ext}' > /usr/local/etc/php/conf.d/docker-php-ext-${ext}.ini"
+        fi
+    done
 fi
 
 echo "==> [1/7] Install PHP dependencies (composer)"
@@ -44,14 +52,15 @@ npm ci
 echo "==> [3/7] Siapkan .env (jika belum ada)"
 if [ ! -f .env ]; then
     cp .env.example .env
-    # Override koneksi DB ke service MySQL devcontainer
-    sed -i 's|^DB_CONNECTION=.*|DB_CONNECTION=mysql|' .env
-    sed -i 's|^# DB_HOST=.*|DB_HOST=mysql|' .env
-    sed -i 's|^# DB_PORT=.*|DB_PORT=3306|' .env
-    sed -i 's|^# DB_DATABASE=.*|DB_DATABASE=absensi|' .env
-    sed -i 's|^# DB_USERNAME=.*|DB_USERNAME=laravel|' .env
-    sed -i 's|^# DB_PASSWORD=.*|DB_PASSWORD=secret|' .env
 fi
+# Override koneksi DB ke service MySQL devcontainer (idempotent).
+# Pakai sed yang match baik versi commented maupun uncommented dari .env.example.
+sed -i -E 's|^#?\s*DB_CONNECTION=.*|DB_CONNECTION=mysql|' .env
+sed -i -E 's|^#?\s*DB_HOST=.*|DB_HOST=mysql|' .env
+sed -i -E 's|^#?\s*DB_PORT=.*|DB_PORT=3306|' .env
+sed -i -E 's|^#?\s*DB_DATABASE=.*|DB_DATABASE=absensi|' .env
+sed -i -E 's|^#?\s*DB_USERNAME=.*|DB_USERNAME=laravel|' .env
+sed -i -E 's|^#?\s*DB_PASSWORD=.*|DB_PASSWORD=secret|' .env
 
 echo "==> [4/7] Generate APP_KEY (kalau belum ada)"
 if ! grep -q "^APP_KEY=base64:" .env; then
