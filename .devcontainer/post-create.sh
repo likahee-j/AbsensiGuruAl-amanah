@@ -8,6 +8,13 @@ cd "$(dirname "$0")/.."
 
 echo "==> [0/7] Pastikan PHP extension gd & zip terinstall"
 if ! php -m | grep -q '^gd$'; then
+    # install-php-extensions adalah helper script mlocati yang otomatis handle
+    # OS lib + docker-php-ext-configure + docker-php-ext-install.
+    if ! command -v install-php-extensions >/dev/null 2>&1; then
+        sudo curl -sSLf -o /usr/local/bin/install-php-extensions \
+            https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions
+        sudo chmod +x /usr/local/bin/install-php-extensions
+    fi
     sudo install-php-extensions gd zip
 fi
 
