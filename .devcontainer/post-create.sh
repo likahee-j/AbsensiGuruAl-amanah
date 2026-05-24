@@ -6,6 +6,11 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+echo "==> [0/7] Pastikan PHP extension gd & zip terinstall"
+if ! php -m | grep -q '^gd$'; then
+    sudo install-php-extensions gd zip
+fi
+
 echo "==> [1/7] Install PHP dependencies (composer)"
 composer install --no-interaction --prefer-dist --optimize-autoloader
 
