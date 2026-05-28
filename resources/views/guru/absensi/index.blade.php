@@ -5,7 +5,13 @@
         $hasCheckIn  = $todayAttendance && $todayAttendance->check_in_time;
         $hasCheckOut = $todayAttendance && $todayAttendance->check_out_time;
         $isLeaveType = $todayAttendance && in_array($todayAttendance->status, ['izin', 'sakit', 'alpa'], true);
-        $needScan    = ! $isLeaveType && (! $hasCheckIn || ! $hasCheckOut);
+
+        // Card scan pulang hanya muncul saat sudah memasuki jam pulang (default 14:00).
+        $checkoutStart   = $settings->check_out_start;
+        $canCheckout     = ! $checkoutStart || now()->format('H:i:s') >= $checkoutStart;
+        $waitingCheckout = ! $isLeaveType && $hasCheckIn && ! $hasCheckOut && ! $canCheckout;
+
+        $needScan    = ! $isLeaveType && (! $hasCheckIn || (! $hasCheckOut && $canCheckout));
         $mode        = ! $hasCheckIn ? 'checkin' : 'checkout';
         $modeLabel   = $mode === 'checkin' ? 'Masuk' : 'Pulang';
     @endphp
@@ -115,6 +121,11 @@
                                         data-bs-toggle="modal" data-bs-target="#scanModal">
                                     <i class="bi bi-qr-code-scan me-1"></i> Scan QR {{ $modeLabel }}
                                 </button>
+                            </div>
+                        @elseif($waitingCheckout)
+                            <div class="alert alert-info small text-center mt-3 mb-0">
+                                Absen masuk Anda sudah tercatat. Absen pulang dapat dilakukan mulai pukul
+                                {{ substr($settings->check_out_start, 0, 5) }}.
                             </div>
                         @else
                             <div class="alert alert-success small text-center mt-3 mb-0">
